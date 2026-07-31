@@ -6,6 +6,7 @@
 
 #indexing -> Slicing (same as list)
 t = (1, 2, 3, 4, 5, 6, 7, 8, 9)
+empty_tuple = ()  #empty tuple
 print(t[0])  # 1
 print(t[2:5])  # (3, 4, 5)
 print(t[-1]) #9

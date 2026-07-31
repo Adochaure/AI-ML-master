@@ -30,3 +30,9 @@ print(A.intersection(B))  #{3}
 
 print(A.intersection_update(B))
 print(A)   #{3}  A-> changed inplace to {3}
+
+
+#clear()
+
+s.clear()  #-> exmpty the set
+
