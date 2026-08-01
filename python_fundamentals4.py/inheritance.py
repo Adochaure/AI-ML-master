@@ -57,7 +57,7 @@ print("1" + "2") # concatenates 2 strings
 #this called operator overloading
 
 #2 types of polymorphism
-#1.function overloading
+#1.method overloading
 
 class Animal:
     def sound(self):
@@ -71,4 +71,3 @@ cat = Cat()
 a.sound() #my name is animal
 cat.sound() #mai hu ogggy!! he he... 
 
-#2.
