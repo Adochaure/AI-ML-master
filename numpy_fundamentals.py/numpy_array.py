@@ -33,3 +33,13 @@ arr6 = np.linspace(0,11,5) #5 numbers between 0 and 11
 print(arr6,arr6.shape)  # Output: [ 0.    2.75  5.5   8.25 11.  ] (5,)
 
 
+# Array properties helps you understand and manipulate data in arrays efficientl
+
+arr = np.array([[1,2,3],[4,5,6]])
+print(arr.ndim)  # Output: 2 (number of dimensions)]
+print(arr.shape)  # Output: (2, 3) (shape of the array)
+print(arr.size)  # Output: 6 (total number of elements in the array)
+print(arr.dtype)  # Output: int64 (data type of the array elements)
+print(arr.itemsize)  # Output: 8 (size in bytes of each element in the array)
+
+
