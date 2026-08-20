@@ -42,4 +42,12 @@ print(arr.size)  # Output: 6 (total number of elements in the array)
 print(arr.dtype)  # Output: int64 (data type of the array elements)
 print(arr.itemsize)  # Output: 8 (size in bytes of each element in the array)
 
-
+# We can also explicitly change the             for our arrays. 
+# Specify dtype at creation  
+str_arr = np.array([1, 2, 3], dtype="U")  
+print(str_arr, str_arr.dtype)  
+float_arr = np.array([1, 2, 3], dtype="float64")  
+print(str_arr, float_arr.dtype)  
+# Creating new array with a specific type from existing array  
+int_arr = float_arr.astype(np.int64)  
+print(int_arr, int_arr.dtype) 
