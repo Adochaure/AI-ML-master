@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Art Editor</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #111;
+    color: #fff;
+    font-family: Arial, sans-serif;
+}
+
+.app {
+    width: min(1100px, 100%);
+    margin: auto;
+    padding: 24px;
+}
+
+.header {
+    margin-bottom: 20px;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: 800;
+}
+
+.logo span {
+    color: #8cff66;
+}
+
+.subtitle {
+    color: #777;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.editor {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+}
+
+/* =========================
+   CANVAS AREA
+========================= */
+
+.canvas-area {
+    min-height: 650px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+    background: #181818;
+    border: 1px solid #292929;
+    border-radius: 14px;
+}
+
+.canvas-wrapper {
+    --grid-size: 16;
+
+    position: relative;
+
+    width: min(580px, 90vw);
+    aspect-ratio: 1;
+
+    background: white;
+
+    border: 2px solid #111;
+
+    box-shadow: 0 20px 50px rgba(0,0,0,.5);
+
+    overflow: hidden;
+}
+
+.canvas-wrapper::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    z-index: 5;
+
+    background-image:
+        linear-gradient(
+            to right,
+            rgba(0,0,0,.35) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            to bottom,
+            rgba(0,0,0,.35) 1px,
+            transparent 1px
+        );
+
+    background-size:
+        calc(100% / var(--grid-size))
+        calc(100% / var(--grid-size));
+
+    background-position:
+        0 0;
+}
+
+canvas {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    image-rendering: pixelated;
+
+    cursor: crosshair;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar {
+    background: #181818;
+    border: 1px solid #292929;
+    border-radius: 14px;
+    padding: 18px;
+}
+
+.section {
+    margin-bottom: 20px;
+}
+
+.section-title {
+    color: #777;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+    margin-bottom: 9px;
+}
+
+/* =========================
+   BUTTONS
+========================= */
+
+button {
+    border: 0;
+    background: #292929;
+    color: white;
+    border-radius: 7px;
+    padding: 9px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: .15s;
+}
+
+button:hover {
+    background: #393939;
+}
+
+button:active {
+    transform: scale(.97);
+}
+
+button.active {
+    background: #8cff66;
+    color: #111;
+    font-weight: bold;
+}
+
+/* =========================
+   SIZE
+========================= */
+
+.size-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+/* =========================
+   COLOR
+========================= */
+
+.color-row {
+    display: flex;
+    gap: 8px;
+}
+
+#colorPicker {
+    width: 48px;
+    height: 38px;
+    padding: 2px;
+    border: 1px solid #444;
+    border-radius: 7px;
+    background: #222;
+    cursor: pointer;
+}
+
+.color-value {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    border-radius: 7px;
+    background: #222;
+    border: 1px solid #333;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+/* =========================
+   PALETTE
+========================= */
+
+.palette {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 5px;
+}
+
+.swatch {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,.2);
+    cursor: pointer;
+}
+
+.swatch:hover {
+    transform: scale(1.1);
+}
+
+/* =========================
+   TOOLS
+========================= */
+
+.tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+.brush-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+.actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+.export {
+    width: 100%;
+    margin-bottom: 7px;
+}
+
+.primary {
+    background: #8cff66;
+    color: #111;
+    font-weight: bold;
+}
+
+.primary:hover {
+    background: #a4ff87;
+}
+
+/* =========================
+   OPTIONS
+========================= */
+
+.check-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #aaa;
+    font-size: 12px;
+}
+
+input[type="checkbox"] {
+    accent-color: #8cff66;
+}
+
+.status {
+    color: #666;
+    font-size: 11px;
+    text-align: center;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 800px) {
+
+    .editor {
+        grid-template-columns: 1fr;
+    }
+
+    .canvas-area {
+        min-height: auto;
+        padding: 15px;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="header">
+        <div class="logo">
+            PIXEL<span>LAB</span>
+        </div>
+
+        <div class="subtitle">
+            Pixel art editor
+        </div>
+    </div>
+
+
+    <div class="editor">
+
+        <!-- =====================
+             CANVAS
+        ====================== -->
+
+        <main class="canvas-area">
+
+            <div class="canvas-wrapper">
+                <canvas id="pixelCanvas"></canvas>
+            </div>
+
+        </main>
+
+
+        <!-- =====================
+             SIDEBAR
+        ====================== -->
+
+        <aside class="sidebar">
+
+
+            <!-- SIZE -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Canvas Size
+                </div>
+
+                <div class="size-buttons">
+
+                    <button
+                        class="size-btn active"
+                        data-size="16">
+                        16 × 16
+                    </button>
+
+                    <button
+                        class="size-btn"
+                        data-size="24">
+                        24 × 24
+                    </button>
+
+                    <button
+                        class="size-btn"
+                        data-size="32">
+                        32 × 32
+                    </button>
+
+                    <button
+                        class="size-btn"
+                        data-size="48">
+                        48 × 48
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- COLOR -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Color
+                </div>
+
+                <div class="color-row">
+
+                    <input
+                        type="color"
+                        id="colorPicker"
+                        value="#000000">
+
+                    <div
+                        class="color-value"
+                        id="colorValue">
+                        #000000
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PALETTE -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Palette
+                </div>
+
+                <div
+                    class="palette"
+                    id="palette">
+                </div>
+
+            </div>
+
+
+            <!-- TOOLS -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Tool
+                </div>
+
+                <div class="tools">
+
+                    <button
+                        id="brushTool"
+                        class="active">
+                        🖌 Brush
+                    </button>
+
+                    <button
+                        id="eraserTool">
+                        ⌫ Eraser
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- BRUSH -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Brush Size
+                </div>
+
+                <div class="brush-buttons">
+
+                    <button
+                        class="brush-size active"
+                        data-brush="1">
+                        1×1
+                    </button>
+
+                    <button
+                        class="brush-size"
+                        data-brush="2">
+                        2×2
+                    </button>
+
+                    <button
+                        class="brush-size"
+                        data-brush="3">
+                        3×3
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- OPTIONS -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Grid
+                </div>
+
+                <label class="check-row">
+
+                    <input
+                        type="checkbox"
+                        id="gridToggle"
+                        checked>
+
+                    Show pixel borders
+
+                </label>
+
+            </div>
+
+
+            <!-- HISTORY -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Actions
+                </div>
+
+                <div class="actions">
+
+                    <button id="undoBtn">
+                        ↶ Undo
+                    </button>
+
+                    <button id="redoBtn">
+                        ↷ Redo
+                    </button>
+
+                    <button id="clearBtn">
+                        Clear
+                    </button>
+
+                    <button id="backgroundBtn">
+                        Background
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- EXPORT -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Export
+                </div>
+
+                <button
+                    class="export primary"
+                    id="copySvg">
+                    Copy SVG
+                </button>
+
+                <button
+                    class="export"
+                    id="downloadSvg">
+                    Download SVG
+                </button>
+
+                <button
+                    class="export"
+                    id="copyPng">
+                    Copy PNG
+                </button>
+
+                <button
+                    class="export"
+                    id="downloadPng">
+                    Download PNG
+                </button>
+
+            </div>
+
+
+            <div
+                class="status"
+                id="status">
+                16 × 16 • Ready
+            </div>
+
+        </aside>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const canvas =
+    document.getElementById("pixelCanvas");
+
+const ctx =
+    canvas.getContext("2d");
+
+const colorPicker =
+    document.getElementById("colorPicker");
+
+const colorValue =
+    document.getElementById("colorValue");
+
+const palette =
+    document.getElementById("palette");
+
+const statusText =
+    document.getElementById("status");
+
+
+/* =========================
+   STATE
+========================= */
+
+let gridSize = 16;
+
+let pixels = [];
+
+let color = "#000000";
+
+let tool = "brush";
+
+let brushSize = 1;
+
+let isDrawing = false;
+
+let showGrid = true;
+
+let backgroundColor = "#ffffff";
+
+let undoStack = [];
+
+let redoStack = [];
+
+
+/* =========================
+   PALETTE
+========================= */
+
+const colors = [
+
+    "#000000",
+    "#ffffff",
+
+    "#ff0000",
+    "#ff6b6b",
+
+    "#ff8800",
+    "#ffff00",
+
+    "#00cc44",
+    "#00ffff",
+
+    "#0088ff",
+    "#6633ff",
+
+    "#cc33ff",
+    "#ff33aa",
+
+    "#8b4513",
+    "#808080",
+
+    "#c0c0c0",
+    "#333333"
+
+];
+
+
+colors.forEach(c => {
+
+    const swatch =
+        document.createElement("div");
+
+    swatch.className =
+        "swatch";
+
+    swatch.style.background =
+        c;
+
+    swatch.title = c;
+
+    swatch.addEventListener(
+        "click",
+        () => {
+
+            color = c;
+
+            colorPicker.value = c;
+
+            colorValue.textContent =
+                c.toUpperCase();
+
+            tool = "brush";
+
+            updateTools();
+
+        }
+    );
+
+    palette.appendChild(swatch);
+
+});
+
+
+/* =========================
+   CREATE PIXELS
+========================= */
+
+function createPixels() {
+
+    pixels = [];
+
+    for (let y = 0; y < gridSize; y++) {
+
+        const row = [];
+
+        for (let x = 0; x < gridSize; x++) {
+
+            row.push(null);
+
+        }
+
+        pixels.push(row);
+    }
+}
+
+
+/* =========================
+   CANVAS SETUP
+========================= */
+function setupCanvas() {
+
+    canvas.width = gridSize;
+    canvas.height = gridSize;
+
+    // Tell CSS how many graph squares to make
+    document
+        .querySelector(".canvas-wrapper")
+        .style.setProperty(
+            "--grid-size",
+            gridSize
+        );
+
+    createPixels();
+
+    undoStack = [];
+    redoStack = [];
+
+    draw();
+
+    updateStatus("Ready");
+}
+
+
+/* =========================
+   DRAW
+========================= */
+
+function draw() {
+
+    ctx.clearRect(
+        0,
+        0,
+        gridSize,
+        gridSize
+    );
+
+    // Background
+    ctx.fillStyle = backgroundColor;
+
+    ctx.fillRect(
+        0,
+        0,
+        gridSize,
+        gridSize
+    );
+
+    // Pixels
+    for (let y = 0; y < gridSize; y++) {
+
+        for (let x = 0; x < gridSize; x++) {
+
+            if (pixels[y][x]) {
+
+                ctx.fillStyle =
+                    pixels[y][x];
+
+                ctx.fillRect(
+                    x,
+                    y,
+                    1,
+                    1
+                );
+
+            }
+
+        }
+
+    }
+
+}
+
+
+    /*
+       GRAPH-PAPER PIXEL BORDERS
+
+       These lines are deliberately
+       drawn ON TOP of the pixels.
+    */
+
+    if (showGrid) {
+
+        ctx.save();
+
+        ctx.strokeStyle =
+            "rgba(0,0,0,0.38)";
+
+        ctx.lineWidth =
+            0.055;
+
+        /*
+           Vertical borders
+        */
+
+        for (
+            let x = 0;
+            x <= gridSize;
+            x++
+        ) {
+
+            ctx.beginPath();
+
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, gridSize);
+
+            ctx.stroke();
+
+        }
+
+
+        /*
+           Horizontal borders
+        */
+
+        for (
+            let y = 0;
+            y <= gridSize;
+            y++
+        ) {
+
+            ctx.beginPath();
+
+            ctx.moveTo(0, y);
+            ctx.lineTo(gridSize, y);
+
+            ctx.stroke();
+
+        }
+
+        ctx.restore();
+
+    }
+
+
+
+/* =========================
+   GET PIXEL
+========================= */
+
+function getPixelPosition(e) {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    const x =
+        Math.floor(
+            ((e.clientX - rect.left) /
+                rect.width) *
+            gridSize
+        );
+
+    const y =
+        Math.floor(
+            ((e.clientY - rect.top) /
+                rect.height) *
+            gridSize
+        );
+
+    return {
+        x,
+        y
+    };
+
+}
+
+
+/* =========================
+   PAINT
+========================= */
+
+function paint(x, y) {
+
+    if (
+        x < 0 ||
+        y < 0 ||
+        x >= gridSize ||
+        y >= gridSize
+    ) {
+        return;
+    }
+
+
+    const start =
+        -Math.floor(brushSize / 2);
+
+    const end =
+        start + brushSize;
+
+
+    for (
+        let dy = start;
+        dy < end;
+        dy++
+    ) {
+
+        for (
+            let dx = start;
+            dx < end;
+            dx++
+        ) {
+
+            const px = x + dx;
+            const py = y + dy;
+
+            if (
+                px >= 0 &&
+                py >= 0 &&
+                px < gridSize &&
+                py < gridSize
+            ) {
+
+                pixels[py][px] =
+                    tool === "eraser"
+                    ? null
+                    : color;
+
+            }
+
+        }
+
+    }
+
+
+    draw();
+
+}
+
+
+/* =========================
+   HISTORY
+========================= */
+
+function saveHistory() {
+
+    undoStack.push(
+        JSON.stringify(pixels)
+    );
+
+    if (undoStack.length > 50) {
+
+        undoStack.shift();
+
+    }
+
+    redoStack = [];
+
+}
+
+
+function undo() {
+
+    if (!undoStack.length) return;
+
+    redoStack.push(
+        JSON.stringify(pixels)
+    );
+
+    pixels =
+        JSON.parse(
+            undoStack.pop()
+        );
+
+    draw();
+
+    updateStatus("Undo");
+
+}
+
+
+function redo() {
+
+    if (!redoStack.length) return;
+
+    undoStack.push(
+        JSON.stringify(pixels)
+    );
+
+    pixels =
+        JSON.parse(
+            redoStack.pop()
+        );
+
+    draw();
+
+    updateStatus("Redo");
+
+}
+
+
+/* =========================
+   MOUSE
+========================= */
+
+canvas.addEventListener(
+    "mousedown",
+    e => {
+
+        isDrawing = true;
+
+        saveHistory();
+
+        const pos =
+            getPixelPosition(e);
+
+        paint(
+            pos.x,
+            pos.y
+        );
+
+    }
+);
+
+
+canvas.addEventListener(
+    "mousemove",
+    e => {
+
+        if (!isDrawing) return;
+
+        const pos =
+            getPixelPosition(e);
+
+        paint(
+            pos.x,
+            pos.y
+        );
+
+    }
+);
+
+
+window.addEventListener(
+    "mouseup",
+    () => {
+
+        isDrawing = false;
+
+    }
+);
+
+
+/* =========================
+   TOUCH
+========================= */
+
+canvas.addEventListener(
+    "touchstart",
+    e => {
+
+        e.preventDefault();
+
+        saveHistory();
+
+        const touch =
+            e.touches[0];
+
+        paintTouch(touch);
+
+    },
+    { passive: false }
+);
+
+
+canvas.addEventListener(
+    "touchmove",
+    e => {
+
+        e.preventDefault();
+
+        const touch =
+            e.touches[0];
+
+        paintTouch(touch);
+
+    },
+    { passive: false }
+);
+
+
+function paintTouch(touch) {
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    const x =
+        Math.floor(
+            ((touch.clientX - rect.left) /
+                rect.width) *
+            gridSize
+        );
+
+    const y =
+        Math.floor(
+            ((touch.clientY - rect.top) /
+                rect.height) *
+            gridSize
+        );
+
+    paint(x, y);
+
+}
+
+
+/* =========================
+   COLOR PICKER
+========================= */
+
+colorPicker.addEventListener(
+    "input",
+    e => {
+
+        color =
+            e.target.value;
+
+        colorValue.textContent =
+            color.toUpperCase();
+
+        tool = "brush";
+
+        updateTools();
+
+    }
+);
+
+
+/* =========================
+   SIZE
+========================= */
+
+document
+    .querySelectorAll(".size-btn")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                gridSize =
+                    Number(
+                        button.dataset.size
+                    );
+
+                document
+                    .querySelectorAll(
+                        ".size-btn"
+                    )
+                    .forEach(b =>
+                        b.classList
+                         .remove("active")
+                    );
+
+                button.classList
+                    .add("active");
+
+                setupCanvas();
+
+            }
+        );
+
+    });
+
+
+/* =========================
+   BRUSH SIZE
+========================= */
+
+document
+    .querySelectorAll(".brush-size")
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                brushSize =
+                    Number(
+                        button.dataset.brush
+                    );
+
+                document
+                    .querySelectorAll(
+                        ".brush-size"
+                    )
+                    .forEach(b =>
+                        b.classList
+                         .remove("active")
+                    );
+
+                button.classList
+                    .add("active");
+
+            }
+        );
+
+    });
+
+
+/* =========================
+   TOOLS
+========================= */
+
+document
+    .getElementById("brushTool")
+    .addEventListener(
+        "click",
+        () => {
+
+            tool = "brush";
+
+            updateTools();
+
+        }
+    );
+
+
+document
+    .getElementById("eraserTool")
+    .addEventListener(
+        "click",
+        () => {
+
+            tool = "eraser";
+
+            updateTools();
+
+        }
+    );
+
+
+function updateTools() {
+
+    document
+        .getElementById("brushTool")
+        .classList
+        .toggle(
+            "active",
+            tool === "brush"
+        );
+
+    document
+        .getElementById("eraserTool")
+        .classList
+        .toggle(
+            "active",
+            tool === "eraser"
+        );
+
+}
+
+
+/* =========================
+   GRID TOGGLE
+========================= */
+
+document
+    .getElementById("gridToggle")
+    .addEventListener(
+        "change",
+        e => {
+
+            showGrid =
+                e.target.checked;
+
+            draw();
+
+        }
+    );
+
+
+/* =========================
+   CLEAR
+========================= */
+
+document
+    .getElementById("clearBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            saveHistory();
+
+            pixels.forEach(
+                row => row.fill(null)
+            );
+
+            draw();
+
+            updateStatus(
+                "Canvas cleared"
+            );
+
+        }
+    );
+
+
+/* =========================
+   BACKGROUND
+========================= */
+
+document
+    .getElementById("backgroundBtn")
+    .addEventListener(
+        "click",
+        () => {
+
+            const bg =
+                prompt(
+                    "Enter background color:",
+                    backgroundColor
+                );
+
+            if (!bg) return;
+
+            backgroundColor =
+                bg;
+
+            draw();
+
+            updateStatus(
+                "Background changed"
+            );
+
+        }
+    );
+
+
+/* =========================
+   UNDO / REDO
+========================= */
+
+document
+    .getElementById("undoBtn")
+    .addEventListener(
+        "click",
+        undo
+    );
+
+
+document
+    .getElementById("redoBtn")
+    .addEventListener(
+        "click",
+        redo
+    );
+
+
+/* =========================
+   SVG
+========================= */
+
+function generateSVG() {
+
+    let rects = "";
+
+    for (
+        let y = 0;
+        y < gridSize;
+        y++
+    ) {
+
+        for (
+            let x = 0;
+            x < gridSize;
+            x++
+        ) {
+
+            if (pixels[y][x]) {
+
+                rects +=
+`<rect x="${x}" y="${y}" width="1" height="1" fill="${pixels[y][x]}"/>`;
+
+            }
+
+        }
+
+    }
+
+
+    return `
+<svg
+xmlns="http://www.w3.org/2000/svg"
+viewBox="0 0 ${gridSize} ${gridSize}"
+shape-rendering="crispEdges">
+
+${rects}
+
+</svg>`;
+
+}
+
+
+/* =========================
+   COPY SVG
+========================= */
+
+document
+    .getElementById("copySvg")
+    .addEventListener(
+        "click",
+        async () => {
+
+            const svg =
+                generateSVG();
+
+            try {
+
+                await navigator
+                    .clipboard
+                    .writeText(svg);
+
+                updateStatus(
+                    "SVG copied!"
+                );
+
+            } catch {
+
+                updateStatus(
+                    "Copy failed"
+                );
+
+            }
+
+        }
+    );
+
+
+/* =========================
+   DOWNLOAD SVG
+========================= */
+
+document
+    .getElementById("downloadSvg")
+    .addEventListener(
+        "click",
+        () => {
+
+            const svg =
+                generateSVG();
+
+            const blob =
+                new Blob(
+                    [svg],
+                    {
+                        type:
+                        "image/svg+xml"
+                    }
+                );
+
+            downloadBlob(
+                blob,
+                `pixel-art-${gridSize}x${gridSize}.svg`
+            );
+
+            updateStatus(
+                "SVG downloaded"
+            );
+
+        }
+    );
+
+
+/* =========================
+   CREATE PNG
+========================= */
+
+function createPNGCanvas(
+    scale = 20
+) {
+
+    const png =
+        document.createElement(
+            "canvas"
+        );
+
+    png.width =
+        gridSize * scale;
+
+    png.height =
+        gridSize * scale;
+
+    const pctx =
+        png.getContext("2d");
+
+    pctx.imageSmoothingEnabled =
+        false;
+
+
+    /*
+       Background
+    */
+
+    pctx.fillStyle =
+        backgroundColor;
+
+    pctx.fillRect(
+        0,
+        0,
+        png.width,
+        png.height
+    );
+
+
+    /*
+       Pixels
+    */
+
+    for (
+        let y = 0;
+        y < gridSize;
+        y++
+    ) {
+
+        for (
+            let x = 0;
+            x < gridSize;
+            x++
+        ) {
+
+            if (pixels[y][x]) {
+
+                pctx.fillStyle =
+                    pixels[y][x];
+
+                pctx.fillRect(
+                    x * scale,
+                    y * scale,
+                    scale,
+                    scale
+                );
+
+            }
+
+        }
+
+    }
+
+
+    return png;
+
+}
+
+
+/* =========================
+   COPY PNG
+========================= */
+
+document
+    .getElementById("copyPng")
+    .addEventListener(
+        "click",
+        () => {
+
+            const png =
+                createPNGCanvas(20);
+
+            png.toBlob(
+                async blob => {
+
+                    try {
+
+                        await navigator
+                            .clipboard
+                            .write([
+                                new ClipboardItem({
+                                    "image/png":
+                                        blob
+                                })
+                            ]);
+
+                        updateStatus(
+                            "PNG copied!"
+                        );
+
+                    } catch {
+
+                        updateStatus(
+                            "PNG copy unsupported"
+                        );
+
+                    }
+
+                },
+                "image/png"
+            );
+
+        }
+    );
+
+
+/* =========================
+   DOWNLOAD PNG
+========================= */
+
+document
+    .getElementById("downloadPng")
+    .addEventListener(
+        "click",
+        () => {
+
+            const png =
+                createPNGCanvas(20);
+
+            png.toBlob(
+                blob => {
+
+                    downloadBlob(
+                        blob,
+                        `pixel-art-${gridSize}x${gridSize}.png`
+                    );
+
+                    updateStatus(
+                        "PNG downloaded"
+                    );
+
+                },
+                "image/png"
+            );
+
+        }
+    );
+
+
+/* =========================
+   DOWNLOAD
+========================= */
+
+function downloadBlob(
+    blob,
+    filename
+) {
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const a =
+        document.createElement("a");
+
+    a.href = url;
+
+    a.download = filename;
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    a.remove();
+
+    URL.revokeObjectURL(url);
+
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+function updateStatus(message) {
+
+    statusText.textContent =
+        `${gridSize} × ${gridSize} • ${message}`;
+
+}
+
+
+/* =========================
+   KEYBOARD
+========================= */
+
+document.addEventListener(
+    "keydown",
+    e => {
+
+        if (
+            e.ctrlKey &&
+            e.key.toLowerCase() === "z"
+        ) {
+
+            e.preventDefault();
+
+            undo();
+
+        }
+
+
+        if (
+            e.ctrlKey &&
+            e.key.toLowerCase() === "y"
+        ) {
+
+            e.preventDefault();
+
+            redo();
+
+        }
+
+
+        if (
+            e.key.toLowerCase() === "b"
+        ) {
+
+            tool = "brush";
+
+            updateTools();
+
+        }
+
+
+        if (
+            e.key.toLowerCase() === "e"
+        ) {
+
+            tool = "eraser";
+
+            updateTools();
+
+        }
+
+    }
+);
+
+
+/* =========================
+   START
+========================= */
+
+setupCanvas();
+
+</script>
+
+</body>
+</html>
